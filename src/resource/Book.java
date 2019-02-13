@@ -1,18 +1,21 @@
 package resource;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 
 public class Book implements Serializable {
 	private ID itemID;
 	private String name;
 	private int totalQuantity;
 	private int availableQuantity;
+	private LinkedList<String> borrowRecord;
 	
 	public Book(ID itemID, String name, int quantity) {
 		this.itemID = itemID;
 		this.name = name;
 		totalQuantity = quantity;
 		availableQuantity = totalQuantity;
+		borrowRecord = new LinkedList<String>();
 	}
 	
 	public void add(int quantity) {
@@ -25,6 +28,20 @@ public class Book implements Serializable {
 			totalQuantity -= quantity;
 			availableQuantity -= quantity;
 		}
+	}
+	
+	public void borrow(String userID) {
+		borrowRecord.add(userID);
+		availableQuantity--;
+	}
+	
+	public boolean returnBook(String userID) {
+		if (borrowRecord.contains(userID)) {
+			borrowRecord.remove(userID);
+			availableQuantity++;
+			return true;
+		}
+		return false;
 	}
 	
 	public ID getID() {

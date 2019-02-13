@@ -69,48 +69,96 @@ public class Client {
 				throw new Exception(userID.getLibraryName() + ": no such library.");
 		}
 		
-		Registry registry = LocateRegistry.getRegistry(port);
+		Registry registry = LocateRegistry.getRegistry(port + Server.RMI_OFFSET);
 		library = (LibraryInterface) registry.lookup("Library");
 		log.write("Successfully connected to library.");
 	}
 	
 	private void addItem() throws Exception {
 		System.out.println(BAR);
-		System.out.println("ADD A ITEM");
+		System.out.println("ADD AN ITEM");
 		System.out.print("Enter the ID of the item: ");
 		ID itemID = new ID(inFromUser.readLine());
 		System.out.print("Enter the name of the item: ");
 		String itemName = inFromUser.readLine();
-		System.out.print("Enter the quantity of the item: ");
+		System.out.print("Enter the quantity of the item you want to add: ");
 		int quantity = Integer.parseInt(inFromUser.readLine());
 
-		if (library.addItem(userID, itemID, itemName, quantity)) {
-			System.out.println("You successfully add " + quantity + " book(s) (ID: " + itemID + ", name: "
-					+ itemName + ").");
-			log.write(userID + " successfully adds " + quantity + " book(s) (ID: " + itemID + ", name: " + itemName
-					+ ").");
-		} else {
-			System.out.println(
-					"You fail to add " + quantity + " book(s) (ID: " + itemID + ", name: " + itemName + ").");
-			log.write(userID + " fails to add " + quantity + " book(s) (ID: " + itemID + ", name: " + itemName + ").");
-		}
-
+		String msg = library.addItem(userID, itemID, itemName, quantity);
+		System.out.println(msg);
+		log.write(msg);
 	}
 	
 	private void removeItem() throws Exception {
+		System.out.println(BAR);
+		System.out.println("REMOVE AN ITEM");
+		System.out.print("Enter the ID of the item: ");
+		ID itemID = new ID(inFromUser.readLine());
+		System.out.print("Enter the quantity of the item you want to remove: ");
+		int quantity = Integer.parseInt(inFromUser.readLine());
 		
+		String msg = library.deleteItem(userID, itemID, quantity);
+		System.out.println(msg);
+		log.write(msg);
 	}
 	
 	private void listItem() throws Exception {
 		System.out.println(BAR);
 		System.out.println("LIST ALL ITEMS");
 		Book[] books = library.listItemAvailability(userID);
+		String msg = userID + " listed all items in the library.";
+		
 		System.out.println();
 		for (Book book : books) {
 			System.out.println(book);
+			msg += ("\r\n" + book);
 		}
 		System.out.println();
-		log.write(userID + " lists all items in the library.");
+		log.write(msg);
+	}
+	
+	private void borrowItem() throws Exception {
+		System.out.println(BAR);
+		System.out.println("BORROW AN ITEM");
+		System.out.print("Enter the ID of the item: ");
+		ID itemID = new ID(inFromUser.readLine());
+		System.out.print("Enter number of days you want to borrow this book: ");
+		int numberOfDay = Integer.parseInt(inFromUser.readLine());
+		String msg = library.borrowItem(userID, itemID, numberOfDay);
+		
+		if (msg.equals(itemID + " is not availbale now. Do you want to be added in the waiting list?")) {
+			System.out.print(msg + "(y/n): ");
+			String choice = inFromUser.readLine();
+			if (choice.equals("y")) {
+				msg = library.addWaitList(userID, itemID);
+			}
+			else {
+				msg = userID + " failed to borrow the item (ID: " + itemID + ") from the library.";
+			}
+		}
+		System.out.println(msg);
+		log.write(msg);
+	}
+	
+	private void findItem() throws Exception {
+		System.out.println(BAR);
+		System.out.println("FIND AN ITEM");
+		System.out.print("Enter the name of the item: ");
+		String itemName = inFromUser.readLine();
+		String msg = userID + " tried to find the item(Name: " + itemName + ")\r\n\r\n";
+		msg += library.findItem(userID, itemName, true);
+		System.out.println(msg);
+		log.write(msg);
+	}
+	
+	private void returnItem() throws Exception {
+		System.out.println(BAR);
+		System.out.println("RETURN AN ITEM");
+		System.out.print("Enter the ID of the item: ");
+		ID itemID = new ID(inFromUser.readLine());
+		String msg = library.returnItem(userID, itemID);
+		System.out.println(msg);
+		log.write(msg);
 	}
 	
 	private void menu() throws Exception {
@@ -139,7 +187,27 @@ public class Client {
 			}
 		}
 		else {
-			
+			while (true) {
+				System.out.println(BAR);
+				System.out.println("USER MENU");
+				System.out.println("1. Borrow an item");
+				System.out.println("2. Find an item");
+				System.out.println("3. Return an item");
+				System.out.println("4. Exit");
+				System.out.print("Select an operation (1-4): ");
+
+				userChoice = inFromUser.readLine();
+				switch (userChoice) {
+					case "1" : borrowItem(); break;
+					case "2" : findItem(); break;
+					case "3" : returnItem(); break;
+					case "4" : 
+						log.write(userID + " logged out."); 
+						System.out.println("You have logged out.");
+						return;
+					default  : System.out.println("Invalid choice. Please try again."); break;
+				}
+			}
 		}
 	}
 	
@@ -148,13 +216,11 @@ public class Client {
 			login();
 			createLog();
 			connectToServer();
-
 			menu();
-			
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			log.write(e.getMessage());
+			log.write("Error: " + e);
 			log.close();
 		}
 	}
