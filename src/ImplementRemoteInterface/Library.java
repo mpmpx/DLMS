@@ -33,12 +33,16 @@ public class Library extends UnicastRemoteObject implements LibraryInterface {
 		this.server = server;
 		repository = new HashMap<String, Book>();
 		
-		Book book = new Book(new ID(name.toString() + "6441"), "Programming", 2);
-		repository.put(book.getID().toString(), book);
+
 		
 		waitingList = new HashMap<String, LinkedList<String>>();
 		borrowRecord = new HashMap<String, Integer>();
 		externalStudentRecord = new LinkedList<String>();
+	}
+	
+	public void initBook(String itemID, String itemName, int quantity) {
+		Book book = new Book(new ID(itemID), "Programming", 2);
+		repository.put(book.getID().toString(), book);
 	}
 	
 	@Override

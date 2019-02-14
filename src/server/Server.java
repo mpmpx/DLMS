@@ -11,6 +11,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 import ImplementRemoteInterface.Library;
+import resource.Book;
 import resource.ID;
 import resource.LibraryName;
 import resource.Log;
@@ -30,6 +31,10 @@ public class Server implements Runnable {
 	protected LibraryName libraryName;
 
 
+	public void initBook(String itemID, String itemName, int quantity) {
+		library.initBook(itemID, itemName, quantity);
+	}
+	
 	public Server(int port) {
 		this.port = port;
 		switch (port) {
@@ -74,9 +79,25 @@ public class Server implements Runnable {
 	}
 	
 	public static void main(String[] args) {
-		new Thread(new Server(CON_PORT)).start();
-		new Thread(new Server(MCG_PORT)).start();
-		new Thread(new Server(MON_PORT)).start();
+		Server CONServer = new Server(CON_PORT);
+		Server MCGServer = new Server(MCG_PORT);
+		Server MONServer = new Server(MON_PORT);
+		
+		CONServer.initBook("CON6231", "Distributed System Design", 4);
+		CONServer.initBook("CON6421", "Compiler Design", 2);
+		CONServer.initBook("CON6521", "Advanced Database Technology and Applications", 10);
+		CONServer.initBook("CON6651", "Algorithm Design Techniques", 7);
+
+		MCGServer.initBook("MCG6231", "Distributed System Design", 2);
+		MCGServer.initBook("MCG6521", "Advanced Database Technology and Applications", 3);
+		
+		MONServer.initBook("MON6231", "Distributed System Design", 5);
+		MONServer.initBook("MON6521", "Advanced Database Technology and Applications", 1);
+		MONServer.initBook("MON6651", "Algorithm Design Techniques", 4);
+		
+		new Thread(CONServer).start();
+		new Thread(MCGServer).start();
+		new Thread(MONServer).start();
 	}
 }
 
